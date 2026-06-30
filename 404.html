@@ -30,16 +30,23 @@
     --mono:"GT America Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
     --chrome:208px; /* vertical space reserved for header/footer when sizing the game */
   }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  html,body{margin:0}
   body{
     font-family:var(--sans);
     background:var(--cream);
     color:var(--ink);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    min-height:100%;overflow:hidden;user-select:none;
+    display:flex;flex-direction:column;align-items:center;
+    min-height:100vh;min-height:100dvh;
+    /* Page can scroll when content is taller than the screen (e.g. landscape phones),
+       but: no sideways scroll from the stage's offset shadow, no rubber-band bounce,
+       and no double-tap zoom. */
+    overflow-x:hidden;overscroll-behavior-y:none;touch-action:manipulation;
   }
-  .wrap{width:100%;max-width:880px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  /* margin:auto centers the page vertically yet stays scrollable when it overflows
+     (unlike justify-content:center, which would clip the top out of reach). */
+  .wrap{width:100%;max-width:880px;padding:16px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:6px}
 
   .eyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:2.5px;
     font-size:clamp(10px,2.5vw,12px);font-weight:700;color:var(--muted);margin:0 0 2px}
@@ -125,12 +132,14 @@
     color:var(--muted);font-size:11px;margin-top:10px;text-align:center}
   @media (orientation:portrait){ body.touch-on .rotatehint{display:block} }
 
-  /* Landscape phones are short: hide the marketing chrome so the game fills the height */
+  /* Landscape phones are short: tighten spacing and shrink the headline so the game
+     stays large, but keep all the text visible and let the page scroll to reach it. */
   @media (orientation:landscape) and (max-height:540px){
-    :root{ --chrome:84px; }
-    .eyebrow,.sub,.footer{display:none}
+    :root{ --chrome:140px; }
     h1{font-size:clamp(15px,4.4vw,20px);margin:0}
-    .wrap{gap:4px;padding:8px}
+    .eyebrow{margin:0}
+    .sub{font-size:12px;margin:2px 0}
+    .wrap{gap:3px;padding:8px}
   }
 </style>
 </head>
@@ -165,7 +174,7 @@
         <div class="card">
           <p class="tag">Hippocorn Run</p>
           <h2>Lost? <span class="hl">Let's play.</span></h2>
-          <p>Take a break from chasing term sheets and scoop some coins in this very buggy game!</p>
+          <p>Take a break from chasing term sheets, and instead scoop some coins in this very buggy game!</p>
           <div class="keys">
             <span><kbd>◀</kbd><kbd>▶</kbd> Move</span>
             <span><kbd>Space</kbd> Jump</span>
