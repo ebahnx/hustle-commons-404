@@ -165,7 +165,7 @@
         <div class="card">
           <p class="tag">Hippocorn Run</p>
           <h2>Lost? <span class="hl">Let's play.</span></h2>
-          <p>Hop over rainbow pipes, bop the glitch bugs, scoop coins, and reach the flag to find your way back.</p>
+          <p>Take a break from chasing term sheets and scoop some coins in this very buggy game!</p>
           <div class="keys">
             <span><kbd>◀</kbd><kbd>▶</kbd> Move</span>
             <span><kbd>Space</kbd> Jump</span>
@@ -313,10 +313,13 @@
   let enemies=[], coinPops=[], flagX=0, camX=0;
 
   function buildEntities(){
+    // Read spawns from the pristine SRC (never mutated) so every respawn gets the
+    // full set of enemies back. (Previously this read LEVEL and deleted each 'g'
+    // marker as it spawned, so after one death no enemies were left to respawn.)
     enemies=[]; coinPops=[]; flagX=0;
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-      const ch=LEVEL[r][c];
-      if(ch==='g'){ enemies.push({x:c*TILE+1,y:r*TILE,w:14,h:14,vx:-0.4,vy:0,onGround:false,alive:true,squashT:0}); setTile(c,r,' '); }
+      const ch=SRC[r][c];
+      if(ch==='g') enemies.push({x:c*TILE+1,y:r*TILE,w:14,h:14,vx:-0.4,vy:0,onGround:false,alive:true,squashT:0});
       if(ch==='F'&&!flagX) flagX=c*TILE;
     }
   }
@@ -513,6 +516,9 @@
       ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fillRect(x+1,y,3,TILE);
       ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(x+TILE-3,y,3,TILE);
       if(topPipe){ ctx.fillStyle='#1A1A1A'; ctx.fillRect(x-2,y,TILE+4,4); }
+    }else if(ch==='o'){
+      const bob=Math.sin(performance.now()/200+c)*1.2; // gentle float
+      drawCoin(x+3,y+3+bob,10);
     }
   }
   function drawCheckpoints(){
