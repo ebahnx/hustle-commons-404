@@ -111,17 +111,17 @@
     .card{padding:20px 18px;gap:10px}
   }
 
-  /* Touch controls — overlaid on the game, see-through so they don't hide the action */
-  .touch{position:absolute;inset:0;pointer-events:none;display:none}
-  .touch .pad{position:absolute;bottom:10px;display:flex;gap:10px}
-  .touch .left{left:10px}.touch .right{right:10px}
-  .tbtn{pointer-events:auto;width:44px;height:44px;border:2px solid var(--ink);
-    background:rgba(251,248,242,.5);color:var(--ink);font-size:17px;font-weight:700;
+  /* Touch controls — a bar BELOW the game window so they never overlap the play area */
+  .touch{display:none}
+  body.touch-on .touch{display:flex;width:100%;max-width:880px;margin-top:10px;
+    justify-content:space-between;align-items:center;padding:0 2px}
+  .touch .pad{display:flex;gap:14px}
+  .tbtn{width:54px;height:54px;border:3px solid var(--ink);
+    background:var(--paper);color:var(--ink);font-size:22px;font-weight:700;
     display:flex;align-items:center;justify-content:center;font-family:var(--sans);touch-action:none;
-    box-shadow:2px 2px 0 rgba(26,26,26,.5);backdrop-filter:blur(1px)}
-  .tbtn.jump{background:rgba(244,202,102,.78);width:52px;height:52px;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.5px}
+    box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+  .tbtn.jump{background:var(--yellow);width:64px;height:64px;font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:1px}
   .tbtn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
-  body.touch-on .touch{display:block}
 
   .footer{font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);
     font-size:11px;margin-top:14px;text-align:center}
@@ -135,11 +135,14 @@
   /* Landscape phones are short: tighten spacing and shrink the headline so the game
      stays large, but keep all the text visible and let the page scroll to reach it. */
   @media (orientation:landscape) and (max-height:540px){
-    :root{ --chrome:140px; }
+    :root{ --chrome:190px; } /* leaves room for the control bar below the game */
     h1{font-size:clamp(15px,4.4vw,20px);margin:0}
     .eyebrow{margin:0}
     .sub{font-size:12px;margin:2px 0}
     .wrap{gap:3px;padding:8px}
+    .touch{margin-top:6px}
+    .tbtn{width:48px;height:48px;font-size:19px}
+    .tbtn.jump{width:56px;height:56px;font-size:11px}
   }
 </style>
 </head>
@@ -158,16 +161,6 @@
         <div class="pill">🌈 <span id="coins">0</span></div>
         <div class="pill">❤️ <span id="lives">4</span></div>
         <div class="pill" id="dist">0m</div>
-      </div>
-
-      <div class="touch">
-        <div class="pad left">
-          <button class="tbtn" id="tLeft" aria-label="left">◀</button>
-          <button class="tbtn" id="tRight" aria-label="right">▶</button>
-        </div>
-        <div class="pad right">
-          <button class="tbtn jump" id="tJump" aria-label="jump">Jump</button>
-        </div>
       </div>
 
       <div class="overlay" id="startOverlay">
@@ -200,7 +193,16 @@
       </div>
     </div>
 
-    <p class="rotatehint">↻ Turn your phone sideways for a bigger screen</p>
+    <div class="touch">
+      <div class="pad left">
+        <button class="tbtn" id="tLeft" aria-label="left">◀</button>
+        <button class="tbtn" id="tRight" aria-label="right">▶</button>
+      </div>
+      <div class="pad right">
+        <button class="tbtn jump" id="tJump" aria-label="jump">Jump</button>
+      </div>
+    </div>
+
     <p class="footer">Lost, but make it fun · <a href="https://hustlecommons.com">hustlecommons.com</a></p>
   </div>
 
@@ -245,9 +247,14 @@
       step++;
     }
     const api={
-      start(){ ensure(); if(!ctx) return; if(ctx.state==='suspended') ctx.resume();
+      start(){ ensure(); if(!ctx) return;
+        // iOS/Safari only truly unlocks audio if a node is started inside the user
+        // gesture — play a 1-sample silent buffer to do that, then resume.
+        try{ const b=ctx.createBuffer(1,1,22050), s=ctx.createBufferSource(); s.buffer=b; s.connect(ctx.destination); s.start(0); }catch(e){}
+        if(ctx.state!=='running' && ctx.resume) ctx.resume();
         if(on){ musicGain.gain.setTargetAtTime(0.5,ctx.currentTime,0.2); }
         if(!timer){ step=0; timer=setInterval(musicStep,185); } },
+      resume(){ if(ctx && ctx.state!=='running' && ctx.resume) ctx.resume(); },
       toggle(){ on=!on; ensure();
         if(ctx) musicGain.gain.setTargetAtTime(on?0.5:0.0,ctx.currentTime,0.05);
         return on; },
@@ -368,7 +375,9 @@
   // get "stuck" when the player tabs away mid-press.
   const releaseAll=()=>{ keys.left=keys.right=keys.jump=false; jumpHeld=false; };
   window.addEventListener('blur',releaseAll);
-  document.addEventListener('visibilitychange',()=>{ if(document.hidden) releaseAll(); });
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden){ releaseAll(); } else { Sound.resume(); } });
+  // iOS can suspend the audio context after interruptions; nudge it back on any input.
+  ['pointerdown','touchstart','keydown'].forEach(ev=>window.addEventListener(ev,()=>Sound.resume(),{passive:true}));
 
   const soundBtn=document.getElementById('soundBtn');
   soundBtn.addEventListener('click',()=>{ const o=Sound.toggle(); soundBtn.textContent=o?'🔊 Sound':'🔇 Muted'; });
