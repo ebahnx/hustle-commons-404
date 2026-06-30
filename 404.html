@@ -69,7 +69,8 @@
   /* HUD */
   .hud{position:absolute;top:9px;left:10px;right:10px;display:flex;justify-content:space-between;gap:6px;
        font-family:var(--mono);font-size:clamp(10px,2.4vw,13px);font-weight:700;pointer-events:none;letter-spacing:1px}
-  .hud .pill{background:var(--ink);color:var(--cream);padding:3px 9px;text-transform:uppercase}
+  .hud .pill{background:var(--ink);color:var(--cream);padding:3px 9px;text-transform:uppercase;
+    white-space:nowrap;flex:0 0 auto;display:inline-flex;align-items:center;gap:3px}
 
   /* sound toggle */
   .sound{position:absolute;top:9px;right:10px;z-index:5;pointer-events:auto;
@@ -135,14 +136,13 @@
   /* Landscape phones are short: tighten spacing and shrink the headline so the game
      stays large, but keep all the text visible and let the page scroll to reach it. */
   @media (orientation:landscape) and (max-height:540px){
-    /* Keep the game large: reserve only enough for the header + control bar, and
-       anchor the page to the top (not centered) so header→game→controls stack from
-       the top with the controls fully on-screen; the footer scrolls into view. */
-    :root{ --chrome:138px; }
-    .wrap{gap:2px;padding:6px 6px 0;margin:0 auto}
+    /* Phone landscape is short. Hide the eyebrow + subtext (headline & footer stay)
+       and anchor to the top so header→game→controls stack from the top with the
+       controls fully on-screen, while the game gets as much height as possible. */
+    :root{ --chrome:112px; }
+    .wrap{gap:3px;padding:6px 6px 0;margin:0 auto}
+    .eyebrow,.sub{display:none}
     h1{font-size:clamp(14px,4vw,18px);margin:0}
-    .eyebrow{margin:0;font-size:10px}
-    .sub{font-size:11px;margin:1px 0;line-height:1.3}
     .touch{margin-top:6px}
     .tbtn{width:46px;height:46px;font-size:18px}
     .tbtn.jump{width:54px;height:54px;font-size:10.5px}
